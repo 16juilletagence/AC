@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="grid-2">
+      <div class="col-left">
+        <div class="card" style="text-align:center;">
+          <div class="avatar xl" id="p-avatar" style="margin:0 auto 12px;"></div>
+          <div class="member-name" id="p-name" style="font-size:17px;"></div>
+          <div class="member-role" id="p-role"></div>
+          <div id="p-status" style="margin-top:8px;"></div>
+          <div class="divider"></div>
+          <div style="text-align:left; font-size:12.5px; color:var(--ink-600);">
+            <p style="margin:0 0 6px;">📍 <span id="p-region"></span></p>
+            <p style="margin:0 0 6px;">👥 <span id="p-groupe"></span></p>
+            <p style="margin:0;">🏢 <span id="p-secteur"></span></p>
+          </div>
+          <div id="p-actions" style="margin-top:14px; display:flex; gap:8px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Nos valeurs partagées</div>
+          <div class="values-strip">
+            <span>Bienveillance</span><span>Engagement</span><span>Solidarité</span><span>Autonomie</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="tabs" id="profile-tabs">
+          <button class="tab active" data-tab="apropos">À propos</button>
+          <button class="tab" data-tab="parcours">Parcours Avarap</button>
+          <button class="tab" data-tab="publications">Publications</button>
+        </div>
+
+        <div id="tab-apropos" class="tab-panel">
+          <div class="card">
+            <div class="card-title">Présentation</div>
+            <p id="p-headline" style="font-size:14px;"></p>
+          </div>
+        </div>
+
+        <div id="tab-parcours" class="tab-panel" style="display:none;">
+          <div class="card">
+            <div class="card-title">Groupe Avarap</div>
+            <div class="list-row">
+              <div class="grow">
+                <div class="title" id="p-groupe2"></div>
+                <div class="sub" id="p-region2"></div>
+              </div>
+              <a href="avarap-groupes.html" class="btn btn-outline btn-sm">Voir le groupe</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Statut actuel</div>
+            <div id="p-status2"></div>
+          </div>
+        </div>
+
+        <div id="tab-publications" class="tab-panel" style="display:none;">
+          <div id="p-posts"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("annuaire");
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id") || "u1";
+    const person = getMember(id) || CURRENT_USER;
+    const isMe = person.id === CURRENT_USER.id;
+    const status = person.status || "recherche";
+    const groupe = person.groupe || CURRENT_USER.groupe;
+    const region = person.region || CURRENT_USER.region;
+    const secteur = person.secteur || "—";
+    const headline = person.headline || "Membre du réseau Avarap.";
+
+    document.title = person.name + " — Avarap Connect";
+    document.getElementById("p-avatar").textContent = person.initials;
+    document.getElementById("p-avatar").style.background = isMe ? "var(--gold-600)" : "var(--navy-700)";
+    document.getElementById("p-name").textContent = person.name;
+    document.getElementById("p-role").textContent = person.role;
+    document.getElementById("p-status").innerHTML = `<span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>`;
+    document.getElementById("p-region").textContent = region;
+    document.getElementById("p-groupe").textContent = groupe;
+    document.getElementById("p-secteur").textContent = secteur;
+    document.getElementById("p-headline").textContent = headline;
+    document.getElementById("p-groupe2").textContent = groupe;
+    document.getElementById("p-region2").textContent = region;
+    document.getElementById("p-status2").innerHTML = `<span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span> <span style="font-size:12.5px;color:var(--ink-600);margin-left:8px;">${person.disponible ? "Disponible pour échanger avec d'autres membres" : "Non disponible actuellement"}</span>`;
+
+    document.getElementById("p-actions").innerHTML = isMe
+      ? `<a href="avarap-parametres.html" class="btn btn-primary btn-sm btn-block">Modifier mon profil</a>`
+      : `<a href="avarap-messagerie.html" class="btn btn-primary btn-sm" style="flex:1;">✉️ Contacter</a><button class="btn btn-outline btn-sm" style="flex:1;">+ Réseau</button>`;
+
+    const posts = POSTS.filter(p => p.authorId === person.id);
+    document.getElementById("p-posts").innerHTML = posts.length ? posts.map(post => `
+      <div class="card post">
+        <div class="avatar" style="background:${isMe ? "var(--gold-600)" : "var(--navy-700)"};">${person.initials}</div>
+        <div class="post-body">
+          <div class="post-head">
+            <span class="post-author">${person.name}</span>
+            <span class="post-meta">· ${post.time}</span>
+          </div>
+          <div class="post-text">${escapeHtml(post.text)}</div>
+        </div>
+      </div>
+    `).join("") : `<div class="empty-state"><div class="glyph">📝</div><p>Aucune publication pour l'instant.</p></div>`;
+
+    document.querySelectorAll("#profile-tabs .tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("#profile-tabs .tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
+        document.getElementById("tab-" + tab.dataset.tab).style.display = "block";
+      });
+    });
+  </script>
+</body>
+</html>

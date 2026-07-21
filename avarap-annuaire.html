@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Annuaire des membres — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Annuaire des membres</h1>
+        <p>Retrouvez les cadres et anciens de tous les groupes Avarap, en France et à distance.</p>
+      </div>
+      <div class="search-box" style="width:280px;">
+        <span>🔎</span>
+        <input type="text" id="search-input" placeholder="Nom, secteur, région…">
+      </div>
+    </div>
+
+    <div class="chip-filters" id="status-filters">
+      <button class="chip-filter active" data-value="tous">Tous</button>
+      <button class="chip-filter" data-value="recherche">En recherche</button>
+      <button class="chip-filter" data-value="poste">En poste</button>
+      <button class="chip-filter" data-value="entrepreneur">Entrepreneur·e</button>
+      <button class="chip-filter" data-value="disponible">Disponible pour échanger</button>
+    </div>
+
+    <div class="member-grid" id="member-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <div class="glyph">🔎</div>
+      <p>Aucun membre ne correspond à votre recherche.</p>
+    </div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("annuaire");
+
+    let currentStatus = "tous";
+    let currentSearch = "";
+
+    function memberCard(m) {
+      return `
+        <div class="card member-card">
+          <div class="member-card-head">
+            <div class="avatar" style="background:var(--navy-700);">${m.initials}</div>
+            <div style="min-width:0;">
+              <div class="member-name truncate">${m.name}</div>
+              <div class="member-role truncate">${m.role}</div>
+            </div>
+          </div>
+          <span class="badge ${statusBadgeClass(m.status)}">${statusLabel(m.status)}</span>
+          ${m.disponible ? '<span class="badge badge-gold">Dispo échange</span>' : ""}
+          <div class="member-meta">
+            <span>📍 ${m.region}</span>
+            <span>👥 ${m.groupe}</span>
+            <span>🏢 ${m.secteur}</span>
+          </div>
+          <a href="avarap-profil.html?id=${m.id}" class="btn btn-outline btn-sm btn-block" style="margin-top:12px;">Voir le profil</a>
+        </div>
+      `;
+    }
+
+    function render() {
+      let list = MEMBERS.slice();
+      if (currentStatus === "disponible") list = list.filter(m => m.disponible);
+      else if (currentStatus !== "tous") list = list.filter(m => m.status === currentStatus);
+      if (currentSearch) {
+        list = list.filter(m =>
+          m.name.toLowerCase().includes(currentSearch) ||
+          m.secteur.toLowerCase().includes(currentSearch) ||
+          m.region.toLowerCase().includes(currentSearch) ||
+          m.role.toLowerCase().includes(currentSearch)
+        );
+      }
+      document.getElementById("member-grid").innerHTML = list.map(memberCard).join("");
+      document.getElementById("empty-state").style.display = list.length ? "none" : "block";
+    }
+
+    initChipFilters("#status-filters", (value) => { currentStatus = value; render(); });
+    initSearch("#search-input", (value) => { currentSearch = value; render(); });
+    render();
+  </script>
+</body>
+</html>

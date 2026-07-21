@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Événements — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Événements</h1>
+        <p>Apéros de promo, webinaires, réunions de bénévoles et temps forts nationaux.</p>
+      </div>
+    </div>
+
+    <div class="chip-filters" id="format-filters">
+      <button class="chip-filter active" data-value="tous">Tous</button>
+      <button class="chip-filter" data-value="Présentiel">Présentiel</button>
+      <button class="chip-filter" data-value="Distanciel">Distanciel</button>
+    </div>
+
+    <div class="row-list card" id="event-list"></div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("evenements");
+
+    function eventRow(ev) {
+      const d = new Date(ev.date);
+      return `
+        <div class="list-row" data-event="${ev.id}">
+          <div style="width:52px; text-align:center; flex-shrink:0;">
+            <div style="font-size:11px; color:var(--ink-400); text-transform:uppercase; font-weight:700;">${d.toLocaleDateString("fr-FR",{month:"short"})}</div>
+            <div style="font-size:20px; font-weight:800; color:var(--navy-800);">${d.getDate()}</div>
+          </div>
+          <div class="grow">
+            <div class="title">${ev.title}</div>
+            <div class="sub">${ev.time} · ${ev.lieu} · <span class="tag">${ev.format}</span></div>
+            <div class="sub">${ev.description}</div>
+          </div>
+          <div style="text-align:right; flex-shrink:0;">
+            <div class="sub" style="margin-bottom:6px;" data-attendees>${ev.attendees} inscrits</div>
+            <button class="btn btn-outline btn-sm" data-join>Je participe</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function render(filter = "tous") {
+      const list = (filter === "tous" ? EVENTS : EVENTS.filter(e => e.format === filter))
+        .slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      document.getElementById("event-list").innerHTML = list.length ? list.map(eventRow).join("") : `<div class="empty-state"><div class="glyph">📅</div><p>Aucun événement pour ce filtre.</p></div>`;
+
+      document.querySelectorAll("[data-join]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const row = btn.closest(".list-row");
+          const id = row.dataset.event;
+          const ev = EVENTS.find(e => e.id === id);
+          if (btn.textContent.includes("Je participe")) {
+            ev.attendees += 1;
+            btn.textContent = "✓ Inscrit";
+            btn.classList.replace("btn-outline", "btn-primary");
+          } else {
+            ev.attendees -= 1;
+            btn.textContent = "Je participe";
+            btn.classList.replace("btn-primary", "btn-outline");
+          }
+          row.querySelector("[data-attendees]").textContent = ev.attendees + " inscrits";
+        });
+      });
+    }
+
+    initChipFilters("#format-filters", render);
+    render();
+  </script>
+</body>
+</html>

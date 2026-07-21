@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fil d'actualité — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="grid-3">
+      <!-- Colonne gauche -->
+      <div class="col-left">
+        <div class="card" style="text-align:center;">
+          <div class="avatar lg" style="margin:0 auto 10px;background:var(--gold-600);">FS</div>
+          <div class="member-name">Florent Salviato</div>
+          <div class="member-role">En repositionnement professionnel</div>
+          <div class="divider"></div>
+          <div style="text-align:left; font-size:12.5px; color:var(--ink-600);">
+            <p style="margin:0 0 6px;">📍 Île-de-France</p>
+            <p style="margin:0;">👥 Paris — Sept. 2025</p>
+          </div>
+          <a href="avarap-profil.html?id=u0" class="btn btn-outline btn-block btn-sm" style="margin-top:12px;">Voir mon profil</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Raccourcis</div>
+          <div class="side-nav">
+            <a href="avarap-annuaire.html">🔎 Annuaire des membres</a>
+            <a href="avarap-groupes.html">👥 Mes groupes</a>
+            <a href="avarap-evenements.html">📅 Événements à venir</a>
+            <a href="avarap-opportunites.html">💼 Opportunités</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne centrale : fil -->
+      <div>
+        <div class="card composer">
+          <div class="composer-row">
+            <div class="avatar sm" style="background:var(--gold-600);">FS</div>
+            <textarea id="post-text" placeholder="Partagez une info, une question ou une opportunité avec le réseau Avarap…"></textarea>
+          </div>
+          <div class="composer-tools">
+            <div>
+              <button class="composer-chip active" data-type="info">💬 Info</button>
+              <button class="composer-chip" data-type="opportunite">💼 Opportunité</button>
+              <button class="composer-chip" data-type="question">❓ Question</button>
+            </div>
+            <button class="btn btn-primary btn-sm" id="publish-btn">Publier</button>
+          </div>
+        </div>
+
+        <div id="feed"></div>
+      </div>
+
+      <!-- Colonne droite -->
+      <div class="col-right">
+        <div class="card">
+          <div class="card-title">Avarapiens à retrouver</div>
+          <div id="suggestions"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Événements à venir</div>
+          <div id="mini-events" class="row-list"></div>
+          <a href="avarap-evenements.html" class="btn btn-ghost btn-sm btn-block" style="margin-top:8px;">Voir tous les événements</a>
+        </div>
+        <div class="card">
+          <div class="card-title">Nos valeurs</div>
+          <div class="values-strip">
+            <span>Bienveillance</span><span>Engagement</span><span>Solidarité</span><span>Autonomie</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("accueil");
+
+    function postCard(post) {
+      const author = getMember(post.authorId);
+      const isMe = author.id === CURRENT_USER.id;
+      const typeIcon = { conseil: "💬", opportunite: "💼", temoignage: "🌟", evenement: "📅", question: "❓" }[post.type] || "💬";
+      return `
+        <div class="card post" data-post="${post.id}">
+          <a href="avarap-profil.html?id=${author.id}" class="avatar" style="background:${isMe ? "var(--gold-600)" : "var(--navy-700)"};">${author.initials}</a>
+          <div class="post-body">
+            <div class="post-head">
+              <a href="avarap-profil.html?id=${author.id}" class="post-author">${author.name}</a>
+              <span class="post-meta">· ${post.time} · ${escapeHtml(post.group)}</span>
+              <span class="tag" style="margin-left:auto;">${typeIcon} ${post.type}</span>
+            </div>
+            <div class="post-text">${escapeHtml(post.text)}</div>
+            <div class="post-actions">
+              <button data-like-btn>
+                <span class="ic">☆</span> J'aime (<span data-like-count="${post.likes}">${post.likes}</span>)
+              </button>
+              <button>💬 Commenter (${post.comments})</button>
+              <button>↗ Partager</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById("feed").innerHTML = POSTS.map(postCard).join("");
+    attachLikeButtons();
+
+    // Suggestions
+    const suggestions = MEMBERS.filter(m => m.disponible).slice(0, 4);
+    document.getElementById("suggestions").innerHTML = suggestions.map(m => `
+      <div class="list-row">
+        <a href="avarap-profil.html?id=${m.id}" class="avatar sm" style="background:var(--navy-700);">${m.initials}</a>
+        <div class="grow">
+          <a href="avarap-profil.html?id=${m.id}" class="title truncate" style="display:block;">${m.name}</a>
+          <div class="sub truncate">${m.role}</div>
+        </div>
+        <a href="avarap-messagerie.html" class="btn btn-outline btn-sm">Contact</a>
+      </div>
+    `).join("");
+
+    // Mini events
+    document.getElementById("mini-events").innerHTML = EVENTS.slice(0, 3).map(ev => `
+      <div class="list-row">
+        <div class="grow">
+          <div class="title truncate">${ev.title}</div>
+          <div class="sub">${new Date(ev.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })} · ${ev.format}</div>
+        </div>
+      </div>
+    `).join("");
+
+    // Composer
+    document.querySelectorAll(".composer-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".composer-chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+      });
+    });
+    document.getElementById("publish-btn").addEventListener("click", () => {
+      const text = document.getElementById("post-text").value.trim();
+      if (!text) return;
+      const newPost = { id: "pnew" + Date.now(), authorId: CURRENT_USER.id, type: "info", time: "À l'instant", text, likes: 0, comments: 0, group: CURRENT_USER.groupe };
+      document.getElementById("feed").insertAdjacentHTML("afterbegin", postCard(newPost));
+      attachLikeButtons();
+      document.getElementById("post-text").value = "";
+    });
+  </script>
+</body>
+</html>

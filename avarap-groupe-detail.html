@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Détail du groupe — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+        <div>
+          <span class="tag" id="g-type"></span>
+          <h1 id="g-name" style="margin-top:8px;"></h1>
+          <p id="g-desc" style="color:var(--ink-600); font-size:13.5px; max-width:620px;"></p>
+          <div class="member-meta" style="margin-top:10px;">
+            <span id="g-region"></span>
+            <span id="g-format"></span>
+            <span id="g-members"></span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="join-btn">+ Rejoindre le groupe</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="col-left">
+        <div class="card">
+          <div class="card-title">Membres du groupe</div>
+          <div id="g-members-list" class="row-list"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="tabs" id="group-tabs">
+          <button class="tab active" data-tab="discussion">Discussion</button>
+          <button class="tab" data-tab="evenements">Événements</button>
+        </div>
+
+        <div id="tab-discussion" class="tab-panel">
+          <div class="card composer">
+            <div class="composer-row">
+              <div class="avatar sm" style="background:var(--gold-600);">FS</div>
+              <textarea placeholder="Écrire au groupe…"></textarea>
+            </div>
+            <div class="composer-tools" style="justify-content:flex-end;">
+              <button class="btn btn-primary btn-sm">Publier</button>
+            </div>
+          </div>
+          <div id="g-posts"></div>
+        </div>
+
+        <div id="tab-evenements" class="tab-panel" style="display:none;">
+          <div id="g-events" class="row-list card"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("groupes");
+
+    const params = new URLSearchParams(window.location.search);
+    const group = GROUPS.find(g => g.id === params.get("id")) || GROUPS[0];
+
+    document.title = group.name + " — Avarap Connect";
+    document.getElementById("g-type").textContent = group.type;
+    document.getElementById("g-name").textContent = group.name;
+    document.getElementById("g-desc").textContent = group.description;
+    document.getElementById("g-region").textContent = "📍 " + group.region;
+    document.getElementById("g-format").textContent = "🗂 " + group.format;
+    document.getElementById("g-members").textContent = "👥 " + group.members + " membres";
+
+    document.getElementById("join-btn").addEventListener("click", (e) => {
+      e.target.textContent = "✓ Membre du groupe";
+      e.target.classList.replace("btn-primary", "btn-outline");
+    });
+
+    // Membres associés (correspondance approximative pour la démo)
+    const relatedMembers = MEMBERS.filter(m => group.name.includes(m.groupe.split(" —")[0]) || m.groupe === group.name).slice(0, 8);
+    const fallbackMembers = relatedMembers.length ? relatedMembers : MEMBERS.slice(0, 5);
+    document.getElementById("g-members-list").innerHTML = fallbackMembers.map(m => `
+      <div class="list-row">
+        <a href="avarap-profil.html?id=${m.id}" class="avatar sm" style="background:var(--navy-700);">${m.initials}</a>
+        <div class="grow">
+          <a href="avarap-profil.html?id=${m.id}" class="title truncate" style="display:block;">${m.name}</a>
+          <div class="sub truncate">${m.role}</div>
+        </div>
+      </div>
+    `).join("");
+
+    // Posts associés
+    const relatedPosts = POSTS.filter(p => p.group === group.name);
+    document.getElementById("g-posts").innerHTML = relatedPosts.length ? relatedPosts.map(post => {
+      const author = getMember(post.authorId);
+      return `
+        <div class="card post">
+          <div class="avatar" style="background:var(--navy-700);">${author.initials}</div>
+          <div class="post-body">
+            <div class="post-head">
+              <span class="post-author">${author.name}</span>
+              <span class="post-meta">· ${post.time}</span>
+            </div>
+            <div class="post-text">${escapeHtml(post.text)}</div>
+          </div>
+        </div>
+      `;
+    }).join("") : `<div class="card empty-state"><div class="glyph">💬</div><p>Pas encore de publication dans ce groupe.</p></div>`;
+
+    // Événements associés (par région)
+    const relatedEvents = EVENTS.filter(ev => ev.region === group.region || ev.region === "National");
+    document.getElementById("g-events").innerHTML = relatedEvents.length ? relatedEvents.map(ev => `
+      <div class="list-row">
+        <div class="grow">
+          <div class="title">${ev.title}</div>
+          <div class="sub">${new Date(ev.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })} · ${ev.format} · ${ev.lieu}</div>
+        </div>
+      </div>
+    `).join("") : `<div class="empty-state"><div class="glyph">📅</div><p>Aucun événement prévu pour ce groupe.</p></div>`;
+
+    document.querySelectorAll("#group-tabs .tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("#group-tabs .tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
+        document.getElementById("tab-" + tab.dataset.tab).style.display = "block";
+      });
+    });
+  </script>
+</body>
+</html>

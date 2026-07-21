@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opportunités — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Opportunités &amp; mises en relation</h1>
+        <p>Offres d'emploi, missions freelance, recherches d'associés et coups de pouce entre Avarapiens.</p>
+      </div>
+      <button class="btn btn-gold" id="new-opp-btn">+ Publier une opportunité</button>
+    </div>
+
+    <div class="chip-filters" id="opp-filters">
+      <button class="chip-filter active" data-value="tous">Toutes</button>
+      <button class="chip-filter" data-value="Emploi salarié">Emploi salarié</button>
+      <button class="chip-filter" data-value="Mission freelance">Mission freelance</button>
+      <button class="chip-filter" data-value="Mise en relation">Mise en relation</button>
+      <button class="chip-filter" data-value="Recherche d'associé">Recherche d'associé</button>
+    </div>
+
+    <div id="opp-form" class="card" style="display:none; margin-bottom:16px;">
+      <div class="card-title">Nouvelle opportunité</div>
+      <div class="field">
+        <label>Titre</label>
+        <input type="text" id="opp-title" placeholder="Ex : Recherche consultant SI freelance">
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select id="opp-type">
+          <option>Emploi salarié</option>
+          <option>Mission freelance</option>
+          <option>Mise en relation</option>
+          <option>Recherche d'associé</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="opp-desc" placeholder="Détaillez le contexte, le profil recherché…"></textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" id="opp-submit">Publier</button>
+    </div>
+
+    <div id="opp-list"></div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("opportunites");
+
+    document.getElementById("new-opp-btn").addEventListener("click", () => {
+      const form = document.getElementById("opp-form");
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    });
+
+    document.getElementById("opp-submit").addEventListener("click", () => {
+      const title = document.getElementById("opp-title").value.trim();
+      const desc = document.getElementById("opp-desc").value.trim();
+      const type = document.getElementById("opp-type").value;
+      if (!title || !desc) return;
+      OPPORTUNITIES.unshift({ id: "onew" + Date.now(), authorId: CURRENT_USER.id, type, title, location: CURRENT_USER.region, postedAgo: "à l'instant", description: desc });
+      document.getElementById("opp-form").style.display = "none";
+      document.getElementById("opp-title").value = "";
+      document.getElementById("opp-desc").value = "";
+      render();
+    });
+
+    function oppCard(o) {
+      const author = getMember(o.authorId);
+      return `
+        <div class="card">
+          <div class="list-row" style="padding:0 0 10px;">
+            <div class="avatar sm" style="background:var(--navy-700);">${author.initials}</div>
+            <div class="grow">
+              <div class="sub"><a href="avarap-profil.html?id=${author.id}" style="font-weight:700; color:var(--ink-900);">${author.name}</a> · ${o.postedAgo}</div>
+            </div>
+            <span class="tag">${o.type}</span>
+          </div>
+          <div class="member-name" style="font-size:15px;">${o.title}</div>
+          <p style="font-size:13px; color:var(--ink-600); margin:8px 0;">${escapeHtml(o.description)}</p>
+          <div class="member-meta" style="margin-bottom:10px;"><span>📍 ${o.location}</span></div>
+          <div style="display:flex; gap:8px;">
+            <a href="avarap-messagerie.html" class="btn btn-primary btn-sm" style="flex:1;">✉️ Contacter</a>
+            <a href="avarap-profil.html?id=${author.id}" class="btn btn-outline btn-sm" style="flex:1;">Voir le profil</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function render(filter) {
+      filter = filter || (document.querySelector("#opp-filters .active")?.dataset.value) || "tous";
+      const list = filter === "tous" ? OPPORTUNITIES : OPPORTUNITIES.filter(o => o.type === filter);
+      document.getElementById("opp-list").innerHTML = list.length ? list.map(oppCard).join("") : `<div class="card empty-state"><div class="glyph">💼</div><p>Aucune opportunité dans cette catégorie.</p></div>`;
+    }
+
+    initChipFilters("#opp-filters", render);
+    render("tous");
+  </script>
+</body>
+</html>

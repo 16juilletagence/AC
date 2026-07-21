@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paramètres — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+<style>
+  .switch-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .switch-row:last-child { border-bottom:none; }
+  .switch-row .label { font-size:13.5px; font-weight:600; }
+  .switch-row .desc { font-size:12px; color:var(--ink-600); margin-top:2px; }
+  .switch { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch .slider { position:absolute; inset:0; background:var(--border); border-radius:999px; transition:.15s; cursor:pointer; }
+  .switch .slider:before { content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s; }
+  .switch input:checked + .slider { background:var(--navy-800); }
+  .switch input:checked + .slider:before { transform:translateX(18px); }
+</style>
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Paramètres du compte</h1>
+        <p>Gérez vos informations, votre confidentialité et vos notifications.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="col-left side-nav">
+        <a href="#infos" class="active">👤 Informations</a>
+        <a href="#confidentialite">🔒 Confidentialité</a>
+        <a href="#notifications">🔔 Notifications</a>
+        <a href="#compte">⚙️ Compte</a>
+      </div>
+
+      <div>
+        <div class="card" id="infos">
+          <div class="card-title">Informations du profil</div>
+          <div class="field">
+            <label>Nom complet</label>
+            <input type="text" value="Florent Salviato">
+          </div>
+          <div class="field">
+            <label>Titre / headline</label>
+            <input type="text" value="Ex-directeur marketing digital · Transition vers le conseil">
+          </div>
+          <div class="field">
+            <label>Région</label>
+            <select>
+              <option>Île-de-France</option>
+              <option>Hauts-de-France</option>
+              <option>Rhône-Alpes Auvergne</option>
+              <option>Pays de la Loire</option>
+              <option>Nouvelle-Aquitaine</option>
+              <option>Provence-Alpes</option>
+              <option>Distanciel / national</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Statut actuel</label>
+            <select>
+              <option value="recherche" selected>En recherche</option>
+              <option value="poste">En poste</option>
+              <option value="entrepreneur">Entrepreneur·e</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card" id="confidentialite">
+          <div class="card-title">Confidentialité — au cœur des valeurs Avarap</div>
+          <div class="switch-row">
+            <div>
+              <div class="label">Afficher mon profil dans l'annuaire</div>
+              <div class="desc">Les membres pourront vous trouver par nom, secteur ou région.</div>
+            </div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div>
+              <div class="label">Autoriser les messages de tous les membres</div>
+              <div class="desc">Sinon, seuls les membres de votre groupe pourront vous contacter.</div>
+            </div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div>
+              <div class="label">Rendre visible mon statut de recherche</div>
+              <div class="desc">Affiche le badge « En recherche » sur votre profil public.</div>
+            </div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <div class="card" id="notifications">
+          <div class="card-title">Notifications</div>
+          <div class="switch-row">
+            <div><div class="label">Résumé hebdomadaire par email</div><div class="desc">Un récap des publications et opportunités de la semaine.</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div><div class="label">Nouvelles opportunités</div><div class="desc">Alerte quand une opportunité correspond à votre secteur.</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div><div class="label">Messages privés</div><div class="desc">Notification immédiate pour tout nouveau message.</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <div class="card" id="compte">
+          <div class="card-title">Compte</div>
+          <p style="font-size:12.5px; color:var(--ink-600);">Email associé : florent.salviato@email.fr</p>
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn btn-primary" id="save-btn">Enregistrer les modifications</button>
+            <button class="btn btn-ghost" style="color:#b3432b;">Supprimer mon compte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration. Confidentialité des échanges garantie entre membres.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("accueil");
+    document.getElementById("save-btn").addEventListener("click", () => {
+      const btn = document.getElementById("save-btn");
+      const original = btn.textContent;
+      btn.textContent = "✓ Préférences enregistrées";
+      setTimeout(() => btn.textContent = original, 2000);
+    });
+  </script>
+</body>
+</html>

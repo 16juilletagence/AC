@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groupes — Avarap Connect</title>
+<link rel="stylesheet" href="avarap-style.css">
+</head>
+<body class="app-shell">
+  <div id="topbar-root"></div>
+
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Groupes Avarap</h1>
+        <p>Groupes de promotion (régionaux et distanciel), groupes thématiques d'anciens, et pool de bénévoles.</p>
+      </div>
+    </div>
+
+    <div class="chip-filters" id="type-filters">
+      <button class="chip-filter active" data-value="tous">Tous</button>
+      <button class="chip-filter" data-value="Groupe de promotion">Groupes de promotion</button>
+      <button class="chip-filter" data-value="Groupe thématique">Groupes thématiques</button>
+      <button class="chip-filter" data-value="Groupe bénévoles">Bénévoles</button>
+    </div>
+
+    <div class="member-grid" id="group-grid"></div>
+  </main>
+
+  <p class="footnote">Avarap Connect — prototype de démonstration, données fictives.</p>
+
+  <script src="avarap-data.js"></script>
+  <script src="avarap-app.js"></script>
+  <script>
+    renderTopbar("groupes");
+
+    function groupCard(g) {
+      return `
+        <div class="card member-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div class="member-name">${g.name}</div>
+            <span class="badge badge-blue" style="white-space:nowrap;">${g.format}</span>
+          </div>
+          <span class="tag" style="margin-top:6px; display:inline-block;">${g.type}</span>
+          <p style="font-size:12.5px; color:var(--ink-600); margin:10px 0;">${g.description}</p>
+          <div class="member-meta">
+            <span>📍 ${g.region}</span>
+            <span>👥 ${g.members} membres</span>
+          </div>
+          <a href="avarap-groupe-detail.html?id=${g.id}" class="btn btn-outline btn-sm btn-block" style="margin-top:12px;">Voir le groupe</a>
+        </div>
+      `;
+    }
+
+    function render(filter = "tous") {
+      const list = filter === "tous" ? GROUPS : GROUPS.filter(g => g.type === filter);
+      document.getElementById("group-grid").innerHTML = list.map(groupCard).join("");
+    }
+
+    initChipFilters("#type-filters", render);
+    render();
+  </script>
+</body>
+</html>
